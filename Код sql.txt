@@ -1,0 +1,245 @@
+create table aircrafts
+( aircraft_code char (3) not null,
+model text not null, 
+range integer not null, 
+CHECK (range >0), 
+primary key ( aircraft_code)
+); 
+
+INSERT INTO aircrafts ( aircraft_code, model, range )
+VALUES 
+( 'SU9', 'Sukhoi SuperJet-100', 3000),
+( '773', 'Boeing 777-300', 11100 ),
+( '763', 'Boeing 767-300', 7900 ),
+( '733', 'Boeing 737-300', 4200 ),
+( '320', 'Airbus A320-200', 5700 ),
+( '321', 'Airbus A321-200', 5600 ),
+( '319', 'Airbus A319-100', 6700 ),
+( 'CN1', 'Cessna 208 Caravan', 1200 ),
+( 'CR2', 'Bombardier CRJ-200', 2700 );
+
+CREATE TABLE seats
+(
+aircraft_code char( 3 ) NOT NULL,
+seat_no varchar( 4 ) NOT NULL,
+fare_conditions varchar( 10 ) NOT NULL,
+CHECK
+( fare_conditions IN ( 'Economy', 'Comfort', 'Business' )
+),
+PRIMARY KEY ( aircraft_code, seat_no ),
+FOREIGN KEY ( aircraft_code )
+REFERENCES aircrafts (aircraft_code )
+ON DELETE CASCADE
+);
+
+INSERT INTO seats VALUES
+( 'SU9', '1A', 'Business' ),
+( 'SU9', '1B', 'Business' ),
+( 'SU9', '10A', 'Economy' ),
+( 'SU9', '10B', 'Economy' ),
+( 'SU9', '10F', 'Economy' ),
+( 'SU9', '20F', 'Economy' ),
+( '773', '4F', 'Economy' ),
+( '773', '15A', 'Comfort' ),
+( '773', '64B', 'Economy' ),
+( '763', '1F', 'Economy' ),
+( '763', '12A', 'Comfort' ),
+( '763', '43B', 'Business' ),
+( '733', '4E', 'Business' ),
+( '733', '15F', 'Comfort' ),
+( '733', '52B', 'Business' ),
+( '320', '31E', 'Economy' ),
+( '320', '12F', 'Comfort' ),
+( '320', '22B', 'Comfort' ),
+( '321', '15E', 'Economy' ),
+( '321', '11F', 'Economy' ),
+( '321', '32B', 'Comfort' ),
+( '319', '16E', 'Business' ),
+( '319', '2R', 'Economy' ),
+( '319', '8B', 'Comfort' ),
+( 'CN1', '21R', 'Business' ),
+( 'CN1', '15H', 'Business' ),
+( 'CN1', '52V', 'Business' ),
+( 'CR2', '2G', 'Economy' ),
+( 'CR2', '5G', 'Economy' ),
+( 'CR2', '11E', 'Economy' );
+
+ -- select count (*) from seats where aircraft_code = '320';
+
+ -- select aircraft_code, count (*) from seats group by aircraft_code order by count;
+ -- select aircraft_code, fare_conditions, count (*) from seats group by aircraft_code, fare_conditions order by fare_conditions, count
+ -- select to_char (current_date, 'dd-mm-yyyy' );
+ -- select '1 year 2 months ago' ::interval
+ -- create TABLE databases (is_open_sourse boolean,dbnames text);
+
+ -- INSERT INTO databases values (true, 'PostgreSQL');
+ -- INSERT INTO databases values (false, 'Oracle');
+ -- INSERT INTO databases values (true, 'MySQL');
+ -- INSERT INTO databases values (false, 'Ms SQL Server');
+  
+ -- select * from databases where is_open_sourse = true;
+  
+create TABLE pilots 
+( pilots_name text,
+  schedule integer []
+
+);
+
+insert into pilots
+values 
+('Kirill', '{1,3,5,6,7}' ::integer[]),
+('Artem', '{1,2,5,7}'::integer[]),
+('Taras','{2,5}'::integer[]),
+('Anna','{3,5,6}' ::integer[]),
+('Arseny', '{2,4}'::integer[]);
+
+update pilots
+ set schedule = schedule ||7 
+ where pilots_name = 'Arseny';
+
+update pilots
+ set schedule = array_append(schedule, 6)  --вставка в конец массива
+ where pilots_name = 'Taras';
+
+update pilots
+ set schedule = array_prepend(1, schedule) --вставка в начало массива
+ where pilots_name = 'Taras';
+
+update pilots
+ set schedule = array_remove (schedule, 5) 
+ where pilots_name = 'Kirill';
+ 
+update pilots
+ set schedule [1:7] = array [1,2,3,4,5,6,7]
+ where pilots_name = 'Artem'; 
+ 
+update pilots
+ set schedule = array_remove (schedule, 4) 
+ where pilots_name = 'Artem';
+ 
+--select *  from pilots 
+--  where array_position (schedule, 3) IS NOT NULL; -- для вывода определенных значений
+
+--select * from  pilots
+--where not  (schedule && array [2,5]);
+
+--select unnest (schedule) AS day_of_week --разворачивает значения и создает их в новый  столбец 
+ --from pilots
+ --where pilots_name = 'Artem'
+
+CREATE TABLE pilots_hobbies
+(
+pilots_name TEXT,
+hobbies JSONB
+);
+
+INSERT INTO pilots_hobbies
+VALUES
+('German', '{"sport": ["футбол", "плаванье"], "home_lib": true, "trips": 3}'::JSONB),
+('Svyat', '{"sport": ["волейбол", "плаванье"], "home_lib": true, "trips": 2}'::JSONB),
+('Ksenia', '{"sport": ["плаванье"], "home_lib": false, "trips": 4}'::JSONB),
+('Alena', '{"sport": ["стрельба", "волейбол", "игромания"], "home_lib": true, "trips": 0}'::JSONB);
+
+--SELECT * FROM pilots_hobbies
+--where hobbies -> 'sport' @>  '["волейбол"]'::JSONB; -- вывод значений другой способ
+
+--select pilots_name, hobbies -> 'sport' as sport
+--from pilots_hobbies
+--where hobbies-> 'sport' @> '["волейбол"]' ::JSONB --@ повторная проверка
+--select count(*)
+--FROM pilots_hobbies
+--where hobbies ? 'sport'
+
+update pilots_hobbies
+ set hobbies = hobbies || '{"sport": ["хоккей"]}'
+ where pilots_name = 'German';
+update pilots_hobbies
+set hobbies = jsonb_set (hobbies, '{"sport"}','["футбол"]')
+where pilots_name = 'German';
+ 
+ 
+ --select * from pilots_hobbies
+ --where pilots_name = 'German'
+
+CREATE TABLE  airports
+(airport_code char(3) not NULL,
+airport_name text not null,
+city text not null,
+longitude float not null,
+latitude float not null,
+timezone text not null,
+PRIMARY KEY(airport_code)
+);
+
+create table flights
+(
+  flight_id serial not null,
+  flight_no char (6) not null,
+  schedule_departure timestamptz not null,
+  schedule_arrival  timestamptz not null,
+  departure_airport char(3) not null,
+  arrival_airport char(3) not null,
+  status varchar(20) not null,
+  aircraft_code char(3) not null,
+  actual_departure timestamptz,
+  actual_arrival timestamptz,
+  Check (schedule_arrival>schedule_departure),
+  Check (status IN ('ON Time','Delay','departed', 'Arrived', 'Cancelled')
+),
+  check (actual_arrival IS not null Or 
+  (actual_arrival is not null and actual_departure is not null and actual_arrival > actual_departure)
+  ),
+  PRIMARY KEY (flight_id),
+  unique(flight_no, schedule_departure),
+  FOREIGN key (aircraft_code)
+    REFERENCES aircrafts(aircraft_code),
+  FOREIGN Key (arrival_airport)
+  REFERENCES airports (airport_code),
+FOREIGN key (departure_airport)
+REFERENCES airports (airport_code)
+);
+
+Create table bookings  (
+  book_ref char (6) not null,
+  book_date timestamptz not null,
+  total_amount numeric(10,2)not null,
+  PRIMARY KEY (book_ref)
+  );
+create table tickets 
+(
+    ticket_n char (13) not null,
+    book_ref char (6) not null, 
+    passenger_id varchar (20) not null,
+    passenger_name text not null,
+    contact_data jsonb, 
+    PRIMARY KEY (ticket_n),
+    FOREIGN key (book_ref)
+    REFERENCES bookings(book_ref)
+);
+
+create table ticket_flights
+(
+  ticket_n char (13) not null,
+  flight_id integer not null,
+  fare_conditions varchar( 10 ) NOT NULL,
+  amount numeric (10,2)
+  check (amount > 0 )
+  CHECK ( fare_conditions IN ( 'Economy', 'Comfort', 'Business' )),
+  PRIMARY key (ticket_n, flight_id),  
+  FOREIGN key (flight_id)
+  REFERENCES flights (flight_id),
+  FOREIGN key (ticket_n)
+  REFERENCES tickets (ticket_n)
+);
+create table broarding_passes
+(
+  ticket_n char (13) not null,
+  flight_id integer not null,
+  broarding_n integer not null,
+  seat_no varchar( 4 ) NOT NULL,
+  PRIMARY key (ticket_n, flight_id),
+  unique (flight_id, broarding_n),
+  unique (flight_id, seat_no),
+  FOREIGN key (ticket_n, flight_id )
+  REFERENCES ticket_flights (ticket_n, flight_id)
+)
